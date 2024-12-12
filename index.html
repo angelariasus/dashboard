@@ -179,7 +179,7 @@
                 fetch(`${apiBaseUrl}/actualizar-puertas`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ puerta1: 180, puerta2: 180 })
+                    body: JSON.stringify({ puerta1: 0, puerta2: 0 })
                 })
                     .then(response => response.json())
                     .then(data => {
@@ -195,7 +195,7 @@
                 fetch(`${apiBaseUrl}/actualizar-puertas`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ puerta1: 0, puerta2: 0 })
+                    body: JSON.stringify({ puerta1: 180, puerta2: 180 })
                 })
                     .then(response => response.json())
                     .then(data => {
