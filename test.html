@@ -1,0 +1,492 @@
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRcs9q7McYShBakc4mwWAAygj-mxZ_nt8"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Poppins', sans-serif;
+                background-color: #d0d0f0;
+            }
+            .font-bold {
+                font-weight: 700;
+            }
+            .font-semibold {
+                font-weight: 600;
+            }
+            .progress-bar {
+                height: 55px;
+                border-radius: 15px;
+                text-align: center;
+                line-height: 55px;
+                color: white;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #stretching-image {
+                object-fit: cover;
+                animation: transform 0.5s ease-in-out;
+            }
+
+            @keyframes stretch {
+                0% {
+                    transform: scaleY(1);
+                }
+                100% {
+                    transform: scaleY(1.1);
+                }
+            }
+        </style>
+    </head>
+    <body class="flex flex-col items-center p-4 h-screen">
+        <div id="map"></div>
+        <div class="bg-[#b0b2ff] text-white w-full max-w-6xl rounded-3xl p-4 pl-8 flex justify-between items-center mb-4 mx-5">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-map-marker-alt" style="font-size: 45px; color: #7968de;"></i>
+                <div>
+                    <p id="estadoBus" class="text-lg text-[#30303c]" style="font-size: 18px;">Paradero actual</p>
+                    <p id="paraderoNombre" class="text-4xl font-semibold text-[#30303c]">Cargando...</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-tachometer-alt" style="font-size: 45px; color: #7968de;"></i>
+                <div>
+                    <p class="text-lg text-[#30303c]" style="font-size: 18px;">Velocidad</p>
+                    <p id="velocidad" class="text-4xl font-semibold text-[#30303c]">Cargando...</p>
+                </div>
+            </div>
+            <button class="bg-[#7968de] text-white px-6 py-4 rounded-lg mr-8 text-xl font-semibold" style="font-size: 22px; border-radius: 20px;" onclick="openMapWindow()">Ver en mapa</button>
+        </div>
+        <div class="w-full max-w-4xl flex-grow flex items-center justify-center mb-4 rounded-lg mx-5 mt-10">
+            <img id="stretching-image" src="burrito.png" alt="Placeholder Image" class="rounded-lg h-full w-full object-cover">
+        </div>
+        <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-10 gap-4 mx-5 pb-5 items-end h-full">
+            <div class="bg-[#e8e8e8] rounded-3xl p-4 flex flex-col col-span-3 h-52 justify-end self-end">
+                <div class="flex items-center space-x-2 mb-2">
+                    <i class="fas fa-users text-gray-700" style="font-size: 28px;"></i>
+                    <p class="text-gray-700 font-bold" style="font-size: 25px;">AFORO</p>
+                </div>
+                <div class="bg-[#30303d] text-white w-full text-center py-2 mb-2" style="border-radius: 15px;">
+                    <p id="totalCount" class="text-3xl font-bold mb-2">...</p>
+
+                </div>
+                <div class="progress-container relative w-full h-14 rounded-3xl bg-white" style="border-radius: 15px;">
+                    <div id="progress-bar" class="absolute top-0 left-0 h-full rounded-3xl" style="border-radius: 15px;"></div>
+                    <div class="progress-text absolute inset-0 flex items-center justify-center">
+                        <p id="percentage" class="text-3xl font-bold"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-3xl p-4 col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4 h-52 justify-end self-end">
+                <div class="pl-5 flex flex-col justify-end">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-sliders-h text-gray-700" style="font-size: 28px;"></i>
+                        <p class="text-gray-700 font-bold" style="font-size: 25px;">CONTROL</p>
+                    </div>
+                    <p class="text-gray-700 mb-2 text-xl"><span class="font-semibold">Estado de aforo:</span> <span id="estadoAforo" class="font-bold text-[#0f0f0f]">NORMAL</span></p>
+                    <p class="text-gray-700 mb-4 text-xl"><span class="font-semibold">Puertas:</span> <span id="estadoPuertas" class="font-bold text-[#0f0f0f]">DESBLOQUEADAS</span></p>
+                    <div class="flex space-x-2">
+                        <button class="bg-[#e67595] text-white px-4 py-2 rounded-lg text-xl font-semibold" style="border-radius: 15px;" onclick="bloquearPuertas()">Bloquear</button>
+                        <button class="bg-[#9d9fe6] text-white px-4 py-2 rounded-lg text-xl font-semibold" style="border-radius: 15px;" onclick="desbloquearPuertas()">Desbloquear</button>
+                    </div>
+                </div>
+                <div class="flex flex-col justify-end">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 35px; color: #c72854;"></i>
+                        <div>
+                            <p id="faltantes" class="text-[#c72854] font-bold" style="font-size: 25px;">...</p>
+                            <p id="faltantes2" class="text-[#d75378] font-semibold" style="font-size: 15px;">...</p>
+                        </div>
+                    </div>
+                    <p id="paraderoNombre2" class="text-[#0f0f0f] font-semibold mb-2 text-xl">Cargando...</p>
+                    <p class="text-gray-700 mb-2 text-xl"><span class="font-semibold">Subieron:</span> <span  id="subenParadero" class="text-[#353553] font-bold" style="font-size: 25px;">... <i class="fas fa-arrow-up" style="color: #a9ef9c;"></i></span></p>
+                    <p class="text-gray-700 text-xl"><span class="font-semibold">Bajaron:</span> <span id="bajanParadero" class="text-[#353553] font-bold" style="font-size: 25px;">... <i class="fas fa-arrow-down" style="color: #d75378;"></i></span></p>
+                </div>
+            </div>
+        </div>
+        <script>
+            const subenCountElement = document.getElementById('subenCount');
+            const bajanCountElement = document.getElementById('bajanCount');
+            const urlBase = 'https://contador-production-0a75.up.railway.app';
+            let total;
+        
+            function actualizarContador() {
+              fetch(`${urlBase}/contador`)
+                .then(response => response.json())
+                .then(data => {
+                    
+                    total = data.suben - data.bajan;
+                    document.getElementById('totalCount').innerHTML = total + ' <span class="text-2xl">personas</span>';
+                    document.getElementById('subenParadero').innerHTML = data.subenParadero + ' <i class="fas fa-arrow-up" style="color: #a9ef9c;"></i>';
+                    document.getElementById('bajanParadero').innerHTML = data.bajanParadero + ' <i class="fas fa-arrow-down" style="color: #d75378;"></i>';
+                })
+                .catch(error => {
+                  console.error('Error al cargar datos:', error);
+                });
+            }
+
+            function actualizarContadoresParadero(suben, bajan) {
+                fetch(`${urlBase}/contador/actualizarParadero`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        subenParadero: suben,
+                        bajanParadero: bajan
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Contadores actualizados:', data);
+                })
+                .catch(error => {
+                    console.error('Error al actualizar los contadores del paradero:', error);
+                });
+            }
+
+            setInterval(actualizarContador, 500); 
+          </script>
+        <script>
+            const apiBaseUrl = "https://api-0cws.onrender.com";
+        
+            function obtenerDatos() {
+              fetch(`${apiBaseUrl}/datos`)
+                .then(response => response.json())
+                .then(data => {
+                  document.getElementById('entradas').innerText = data.entradas;
+                  document.getElementById('salidas').innerText = data.salidas;
+                  document.getElementById('puerta1').innerText = data.puerta1;
+                  document.getElementById('puerta2').innerText = data.puerta2;
+                })
+                .catch(error => console.error("Error al obtener datos:", error));
+            }
+            // Refresca los datos automáticamente cada 5 segundos
+            setInterval(obtenerDatos, 100);
+        
+            window.onload = obtenerDatos;
+          </script>
+        <script>
+            const estadoPuertas = document.getElementById('estadoPuertas');
+            function bloquearPuertas() {
+                estadoPuertas.textContent = "BLOQUEADAS";
+                fetch(`${apiBaseUrl}/actualizar-puertas`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ puerta1: 180, puerta2: 180 })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                    console.log("Puertas actualizadas:", data);
+                    obtenerDatos(); // Actualiza el estado después de enviar los datos
+                    })
+                    .catch(error => console.error("Error al actualizar puertas:", error));
+            }
+        
+            function desbloquearPuertas() {
+                const estadoPuertas = document.getElementById('estadoPuertas');
+                estadoPuertas.textContent = "DESBLOQUEADAS";
+                fetch(`${apiBaseUrl}/actualizar-puertas`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ puerta1: 0, puerta2: 0 })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                    console.log("Puertas actualizadas:", data);
+                    obtenerDatos(); // Actualiza el estado después de enviar los datos
+                    })
+                    .catch(error => console.error("Error al actualizar puertas:", error));
+            }
+        </script>
+        <script>
+            //Determina que animacion tiene el burrito
+            function actualizarAnimacionImagen() {
+                const velocidad = parseFloat(document.getElementById('velocidad').innerText);
+                const imagen = document.getElementById('stretching-image');
+                if (velocidad > 0) {
+                    imagen.style.animation = 'stretch 0.5s ease-in-out infinite alternate';
+                } else {
+                    imagen.style.animation = 'none';
+                }
+            }
+
+            function actualizarAnimacionCaution() {
+                const imagen = document.getElementById('stretching-image-caution');
+                if (percentage > 7) {
+                    imagen.style.animation = 'stretch 0.5s ease-in-out infinite alternate';
+                } else {
+                    imagen.style.animation = 'none';
+                }
+            }
+
+            //Cambia el color de la barra
+            const aforoMaximo = 15;  // Aforo máximo del espacio
+
+            function updateProgressBar(percentage) {
+                const progressBar = document.getElementById('progress-bar');
+                const estadoAforo = document.getElementById('estadoAforo');
+                progressBar.style.width = percentage + '%';
+
+                if (percentage < 50) {
+                    progressBar.classList.remove('bg-[f8f06e]', 'bg-[#dc5178]');
+                    progressBar.classList.add('bg-[#a9ef9c]');
+                    estadoAforo.textContent = "NORMAL";
+                } else if (percentage < 75) {
+                    progressBar.classList.remove('bg-[#a9ef9c]', 'bg-[#dc5178]');
+                    progressBar.classList.add('bg-[f8f06e]');
+                    estadoAforo.textContent = "MODERADO";
+                } else {
+                    progressBar.classList.remove('bg-[#a9ef9c]', 'bg-[f8f06e]');
+                    progressBar.classList.add('bg-[#dc5178]');
+                    estadoAforo.textContent = "LLENO";
+                }
+            }
+            let percentage;
+            function actualizarPorcentaje() {
+            fetch(`${urlBase}/contador`)
+                .then(response => response.json())
+                .then(data => {
+                    const totalCount = data.suben - data.bajan;
+                    percentage = Math.round((totalCount / aforoMaximo) * 100);
+                    percentage = Math.max(0, Math.min(percentage, 100));
+                    document.getElementById('percentage').textContent = percentage + '%';
+                    const faltantes = Math.max(0, aforoMaximo - totalCount);
+                    document.getElementById('faltantes').textContent = `Faltan ${faltantes} personas`;
+                    document.getElementById('faltantes2').textContent = `para alcanzar el aforo máximo`;
+                    if(faltantes == 0){
+                        document.getElementById('faltantes').textContent = `Bus con foro máximo`;
+                        document.getElementById('faltantes2').textContent = `No pueden subir más personas`;
+                    }
+                    updateProgressBar(percentage);
+                })
+                .catch(error => console.error('Error al cargar datos:', error));
+            }
+
+            // Llama la función periódicamente para mantener la sincronización
+            setInterval(actualizarPorcentaje, 500);  // Actualiza cada segundo
+
+        </script>
+        <script>
+            function openMapWindow() {
+                window.open('mapa.html', 'Mapa', 'width=800,height=600');
+            }
+        </script>
+        <script>
+            const puntos = [
+                [-12.060138, -77.084420], [-12.060472, -77.084306], [-12.060896, -77.084214],
+                [-12.060901, -77.083799], [-12.060786, -77.082980], [-12.060668, -77.082203],
+                [-12.060570, -77.081613], [-12.060413, -77.080988], [-12.060224, -77.080320],
+                [-12.060077, -77.079896], [-12.059978, -77.079724], [-12.059873, -77.079628],
+                [-12.059681, -77.079622], [-12.059508, -77.079665], [-12.059242, -77.079727],
+                [-12.058588, -77.079899], [-12.057971, -77.080053], [-12.057363, -77.080216],
+                [-12.057210, -77.080260], [-12.056875, -77.080354], [-12.056637, -77.080408],
+                [-12.056432, -77.080578], [-12.056229, -77.080801], [-12.056075, -77.081013],
+                [-12.056128, -77.081123], [-12.055960, -77.081387], [-12.055819, -77.081604],
+                [-12.055629, -77.081753], [-12.055435, -77.082071], [-12.055325, -77.082294],
+                [-12.055285, -77.082481], [-12.055391, -77.082639], [-12.055488, -77.082802],
+                [-12.055503, -77.083047], [-12.055464, -77.083235], [-12.055199, -77.083404],
+                [-12.054970, -77.083499], [-12.054803, -77.083585], [-12.054649, -77.083757],
+                [-12.054543, -77.083945], [-12.054369, -77.084238], [-12.054147, -77.084583],
+                [-12.053929, -77.084876], [-12.053770, -77.085169], [-12.053735, -77.085552],
+                [-12.053692, -77.085804], [-12.053679, -77.085963], [-12.053539, -77.086187],
+                [-12.053471, -77.086382], [-12.053484, -77.086433], [-12.053653, -77.086439],
+                [-12.054111, -77.086472], [-12.054496, -77.086516], [-12.054662, -77.086551],
+                [-12.054786, -77.086658], [-12.054810, -77.086448], [-12.054853, -77.086084],
+                [-12.054881, -77.085765], [-12.054909, -77.085488], [-12.054959, -77.085346],
+                [-12.055034, -77.085362], [-12.055095, -77.085285], [-12.055079, -77.085217],
+                [-12.055109, -77.085157], [-12.055203, -77.085011], [-12.055315, -77.084801],
+                [-12.055355, -77.084743], [-12.055619, -77.084769], [-12.055717, -77.084781],
+                [-12.055970, -77.084896], [-12.056204, -77.085015], [-12.056307, -77.085081],
+                [-12.056467, -77.085170], [-12.056725, -77.085306], [-12.057085, -77.085462],
+                [-12.057480, -77.085622], [-12.057824, -77.085742], [-12.057985, -77.085723],
+                [-12.058104, -77.085640], [-12.058263, -77.085405], [-12.058391, -77.085200],
+                [-12.058528, -77.084986], [-12.058654, -77.084893], [-12.058797, -77.084781],
+                [-12.058896, -77.084577], [-12.058983, -77.084602], [-12.059161, -77.084612],
+                [-12.059467, -77.084539], [-12.059844, -77.084456], [-12.060138, -77.084420]
+            ];
+
+        const paraderos = [
+            [-12.060138, -77.084420, 'Paradero Metalúrgica'],
+            [-12.060786, -77.082980, 'Paradero Comedor'],
+            [-12.059508, -77.079665, 'Paradero Puerta 2'],
+            [-12.057210, -77.080260, 'Paradero Puerta 3'],
+            [-12.055435, -77.082071, 'Paradero Clínica'],
+            [-12.054147, -77.084583, 'Paradero Puerta 7'],
+            [-12.053692, -77.085804, 'Paradero Sistemas'],
+            [-12.054853, -77.086084, 'Paradero Odontología'],
+            [-12.056307, -77.085081, 'Paradero Biblioteca']
+        ];
+
+        const cercanos = [
+            [-12.060901, -77.083799],
+            [-12.059681, -77.079622],
+            [-12.057363, -77.080216],
+            [-12.055629, -77.081753],
+            [-12.054369, -77.084238],
+            [-12.053735, -77.085552],
+            [-12.054810, -77.086448],
+            [-12.056204, -77.085015],
+            [-12.059844, -77.084456]
+        ];
+
+        function interpolarPuntos(p1, p2, n) {
+            const puntos = [];
+            const latPaso = (p2[0] - p1[0]) / (n + 1);
+            const lngPaso = (p2[1] - p1[1]) / (n + 1);
+
+            for (let i = 1; i <= n; i++) {
+                puntos.push([p1[0] + latPaso * i, p1[1] + lngPaso * i]);
+            }
+
+            return puntos;
+        }
+
+        function calcularDistancia(p1, p2) {
+            const R = 6371;
+            const lat1 = p1[0] * Math.PI / 180;
+            const lat2 = p2[0] * Math.PI / 180;
+            const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+            const dLng = (p2[1] - p1[1]) * Math.PI / 180;
+
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1) * Math.cos(lat2) *
+                    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c; 
+        }
+        
+        let recorridoInterpolado = [];
+        for (let i = 0; i < puntos.length - 1; i++) {
+            let puntosIntermedios = interpolarPuntos(puntos[i], puntos[i + 1], 5); 
+            recorridoInterpolado.push(puntos[i], ...puntosIntermedios);
+        }
+        recorridoInterpolado.push(puntos[puntos.length - 1]);
+
+        let map;
+        let marker;
+        let index = 0;
+        let lastTime = Date.now();
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: -12.057159, lng: -77.082641},
+                zoom: 16
+            });
+
+            const polyline = new google.maps.Polyline({
+                path: recorridoInterpolado.map(p => ({ lat: p[0], lng: p[1] })),
+                geodesic: true,
+                strokeColor: '#0000FF',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+            polyline.setMap(map);
+
+            paraderos.forEach(function(punto) {
+                new google.maps.Marker({
+                    position: { lat: punto[0], lng: punto[1] },
+                    map: map,
+                    icon: {
+                        url: 'busstop_marker.png',
+                        scaledSize: new google.maps.Size(15.56,26.78), 
+                        origin: new google.maps.Point(0, 0),
+                        anchor: new google.maps.Point(10, 10)
+                    }
+                });
+            });
+            
+            marker = new google.maps.Marker({
+                position: { lat: puntos[0][0], lng: puntos[0][1] },
+                map: map,
+            });
+
+
+            let velocidadHistorica = []; 
+            function moverMarcador() {
+                const currentTime = Date.now();
+                const elapsedTime = (currentTime - lastTime) / 1000; 
+                marker.setPosition({
+                    lat: recorridoInterpolado[index][0],
+                    lng: recorridoInterpolado[index][1]
+                });
+                const paraderoActual = paraderos.find(punto => 
+                    Math.abs(punto[0] - recorridoInterpolado[index][0]) < 0.00005 &&
+                    Math.abs(punto[1] - recorridoInterpolado[index][1]) < 0.00005
+                );
+
+                const paraderoReset = cercanos.find(punto => 
+                    Math.abs(punto[0] - recorridoInterpolado[index][0]) < 0.00005 &&
+                    Math.abs(punto[1] - recorridoInterpolado[index][1]) < 0.00005
+                );
+
+                if (paraderoReset){
+                    actualizarContadoresParadero(0, 0);
+                } 
+
+                if (paraderoActual) {
+                    if(total < aforoMaximo){
+                        desbloquearPuertas();
+                    } else {
+                        bloquearPuertas();
+                    }
+                    document.getElementById('paraderoNombre').textContent = paraderoActual[2];
+                    document.getElementById('paraderoNombre2').textContent = paraderoActual[2];
+                    document.getElementById('velocidad').innerHTML = '0' + '<span class="font-semibold text-[#30303c]" style="font-size: 20px;"> km/h</span>';
+                    document.getElementById('estadoBus').textContent = 'Paradero actual';
+                    actualizarAnimacionImagen();
+                    setTimeout(() => {
+                        bloquearPuertas();
+                        const nextParaderoIndex = (paraderos.indexOf(paraderoActual) + 1) % paraderos.length;
+                        document.getElementById('estadoBus').textContent = 'Siguiente paradero';
+                        document.getElementById('paraderoNombre').textContent = paraderos[nextParaderoIndex][2];
+                        index = (index + 1) % recorridoInterpolado.length;
+                    }, 15000);
+                } else {
+                    const nextIndex = (index + 1) % recorridoInterpolado.length;
+                    const dist = calcularDistancia(recorridoInterpolado[index], recorridoInterpolado[nextIndex]);
+                    
+                    let paraderoCercano = paraderos[0];
+                    let distToParadero = calcularDistancia(recorridoInterpolado[index], paraderoCercano);
+                    paraderos.forEach(punto => {
+                        const distancia = calcularDistancia(recorridoInterpolado[index], punto);
+                        if (distancia < distToParadero) {
+                            paraderoCercano = punto;
+                            distToParadero = distancia;
+                        }
+                    });
+
+                    let speed = dist / elapsedTime; 
+                    if (distToParadero < 0.0001) { 
+                        speed = 0; 
+                    } else {
+                        const reductionFactor = distToParadero / 0.1; 
+                        speed *= reductionFactor; 
+                    }
+
+                    velocidadHistorica.push(speed * 3600); 
+
+                    if (velocidadHistorica.length > 5) {
+                        velocidadHistorica.shift(); 
+                    }
+
+                    const velocidadPromedio = velocidadHistorica.reduce((a, b) => a + b, 0) / velocidadHistorica.length;
+                    document.getElementById('velocidad').innerHTML = velocidadPromedio.toFixed(2) + '<span class="font-semibold text-[#30303c]" style="font-size: 20px;"> km/h</span>';
+                    actualizarAnimacionImagen();
+                    index = nextIndex;
+                }
+                lastTime = currentTime;
+            }
+            setInterval(moverMarcador, 1000); 
+        }
+        initMap();
+        </script>
+    </body>
+</html>

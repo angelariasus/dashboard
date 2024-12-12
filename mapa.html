@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recorrido Interpolado en Google Maps</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDRcs9q7McYShBakc4mwWAAygj-mxZ_nt8&callback=initMap&v=weekly" 
+            async defer></script>
+    <style>
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #paraderoInfo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+        #velocidadInfo {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="paraderoInfo">Paradero actual: <span id="paraderoNombre">Cargando...</span></div>
+    <div id="velocidadInfo">Velocidad: <span id="velocidad">0 km/h</span></div>
+    <script src="burrito.js"></script>
+</body>
+</html>
