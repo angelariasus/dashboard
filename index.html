@@ -445,7 +445,6 @@
                     document.getElementById('estadoBus').textContent = 'Paradero actual';
                     actualizarAnimacionImagen();
                     setTimeout(() => {
-                        bloquearPuertas();
                         const nextParaderoIndex = (paraderos.indexOf(paraderoActual) + 1) % paraderos.length;
                         document.getElementById('estadoBus').textContent = 'Siguiente paradero';
                         document.getElementById('paraderoNombre').textContent = paraderos[nextParaderoIndex][2];
