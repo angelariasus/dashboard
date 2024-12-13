@@ -464,7 +464,7 @@
                         document.getElementById('estadoBus').textContent = 'Siguiente paradero';
                         document.getElementById('paraderoNombre').textContent = paraderos[nextParaderoIndex][2];
                         index = (index + 1) % recorridoInterpolado.length;
-                    }, 20000);
+                    }, 120000);
                 } else {
                     const nextIndex = (index + 1) % recorridoInterpolado.length;
                     const dist = calcularDistancia(recorridoInterpolado[index], recorridoInterpolado[nextIndex]);
