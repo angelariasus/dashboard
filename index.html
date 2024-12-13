@@ -93,7 +93,7 @@
                     <p class="text-gray-700 mb-4 text-xl"><span class="font-semibold">Puertas:</span> <span id="estadoPuertas" class="font-bold text-[#0f0f0f]">DESBLOQUEADAS</span></p>
                     <div class="flex space-x-2">
                         <button class="bg-[#e67595] text-white px-4 py-2 rounded-lg text-xl font-semibold" style="border-radius: 15px;" onclick="bloquearPuertas()">Bloquear</button>
-                        <button class="bg-[#9d9fe6] text-white px-4 py-2 rounded-lg text-xl font-semibold" style="border-radius: 15px;" onclick="desbloquearPuertas()">Desbloquear</button>
+                        <button class="bg-[#9d9fe6] text-white px-4 py-2 rounded-lg text-xl font-semibold" style="border-radius: 15px;" onclick="desbloquearPuertasButton()">Desbloquear</button>
                     </div>
                 </div>
                 <div class="flex flex-col justify-end">
@@ -115,12 +115,13 @@
             const bajanCountElement = document.getElementById('bajanCount');
             const urlBase = 'https://contador-production-5202.up.railway.app';
             let total;
+            let estadoParadero;
         
             function actualizarContador() {
               fetch(`${urlBase}/contador`)
                 .then(response => response.json())
                 .then(data => {
-                    
+                    estadoParadero = data.estado;
                     total = data.suben - data.bajan;
                     document.getElementById('totalCount').innerHTML = total + ' <span class="text-2xl">personas</span>';
                     document.getElementById('subenParadero').innerHTML = data.subenParadero + ' <i class="fas fa-arrow-up" style="color: #a9ef9c;"></i>';
@@ -174,6 +175,16 @@
           </script>
         <script>
             const estadoPuertas = document.getElementById('estadoPuertas');
+
+            function desbloquearPuertasButton(){
+                const velocidad = parseFloat(document.getElementById('velocidad').innerText);
+                if(velocidad > 0){
+                    console.log("El burrito esta en movimiento:");
+                } else {
+                    desbloquearPuertas();
+                }
+            }
+
             function bloquearPuertas() {
                 estadoPuertas.textContent = "BLOQUEADAS";
                 fetch(`${apiBaseUrl}/actualizar-puertas`, {
@@ -432,19 +443,23 @@
                 } 
 
                 if (paraderoActual) {
-                    /*
                     if(total < aforoMaximo){
                         desbloquearPuertas();
                     } else {
-                        bloquearPuertas();
+                        if(estadoParadero == 1){
+                           bloquearPuertas();
+                        } else {
+                            desbloquearPuertas();
+                        }
                     }
-                    */
+                    
                     document.getElementById('paraderoNombre').textContent = paraderoActual[2];
                     document.getElementById('paraderoNombre2').textContent = paraderoActual[2];
                     document.getElementById('velocidad').innerHTML = '0' + '<span class="font-semibold text-[#30303c]" style="font-size: 20px;"> km/h</span>';
                     document.getElementById('estadoBus').textContent = 'Paradero actual';
                     actualizarAnimacionImagen();
                     setTimeout(() => {
+                        bloquearPuertas();
                         const nextParaderoIndex = (paraderos.indexOf(paraderoActual) + 1) % paraderos.length;
                         document.getElementById('estadoBus').textContent = 'Siguiente paradero';
                         document.getElementById('paraderoNombre').textContent = paraderos[nextParaderoIndex][2];
